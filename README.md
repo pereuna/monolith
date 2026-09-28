@@ -1,5 +1,9 @@
 # Monolith
 
+> **Siirretty:** Monolith on nyt osa Plan2001:tä, hakemisto
+> [`monolith/`](https://github.com/pereuna/Plan2001/tree/main/monolith)
+> (historia mukana). Tämä repo on arkistoitu.
+
 **Plan2001:n drawterm selaimessa.** Selain on Plan2001:n terminaali: se yhdistää
 Plan2001:een cpu-palvelimena ja tarjoaa sille näytön, hiiren ja näppäimistön,
 kuten drawterm tekee X11:n, Waylandin tai Win32:n päällä. CPU-palvelin
