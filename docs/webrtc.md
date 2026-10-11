@@ -87,6 +87,36 @@ ratkea verkkojen välillä. Siksi kahden verkon välillä tarvitaan `&stun=`,
 vaikka molemmilla olisi julkinen IPv6-osoite: STUN paljastaa
 osoitteen kandidaattina, ja yhteys on silti suora.
 
+## Muu käyttäjä: certiration launchpad
+
+`rtcsignal`illa on toinen asiakas kuin `platform.js`: certiration
+(pereuna/certiratio) IPv6 launchpad, puhelinten yhteinen tekstivirta
+suoraan IPv6:lla (`poc1/web/launchpad.html`, `src/launchpad.js`,
+`src/signaling.js`; certiratio `poc1/README.md`). Koodia ei jaeta: se
+on oma WebRTC-meshinsä (liittyjä aloittaa, yksi DataChannel vertaista
+kohden, vain IPv6-kandidaatit), ja jedin `rtcsignal` palvelee sitä
+sellaisenaan.
+
+    https://pereuna.github.io/certiratio/       sivu GitHub Pagesista, signalointi jediin
+    https://jedi.ydns.eu:8443/launchpad.html    sama sivu jedin --webistä
+
+Launchpad nojaa näihin; muutos niihin rikkoo sen:
+
+- Sanomat `join {room, name}` → `welcome {peers}`, `peer-joined` ja
+  `peer-left {name}`, `signal {to, data}` → `signal {from, data}`,
+  `log {name, line}` (lokiin `--log`), virheet `name-taken` (sivu
+  lisää nimeen päätteen) ja `room-full`.
+- `NAME` (`[a-z0-9-]{1,32}`), `MAXPEERS` 8 ja `MAXMSG` 64 KB.
+- WebSocket mistä tahansa polusta (`wss://jedi.ydns.eu:8443/`) ja mistä
+  tahansa originista: GitHub Pagesista ladattu sivu signaloi jediin.
+  `Origin`-tarkistus katkaisisi sen.
+- `--web`: `TYPES`:n `.html` ja `.js` (moduulit `src/`-alihakemistosta);
+  tyylit ovat sivussa, koska `.css`:ää ei ole. COOP/COEP eivät haittaa.
+
+`~/rtcsignal/site/` on yhteinen: `rtcsite` kopioi koneen tiedostot
+mutta ei tyhjennä hakemistoa, joten `launchpad.html` ja `src/` säilyvät.
+Huoneet ovat yhteiset (`koe1`, `launchpad`), samoin `pages.log`.
+
 ## Avoimet
 
 - Vertaisen nimi kuunnellun keskustelun `remote`iin (sivu tietää sen).
