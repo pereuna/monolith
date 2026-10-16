@@ -8,7 +8,7 @@ historioineen (Plan2001:n `docs/repos.md`).
 |---|---|
 | 9frontin julkaisukopio (osajoukko) ja USB-asennin | `subset/`, `tools/subset/`, `plan2001/rc/bin/inst`, `docs/install-subset.md` |
 | Palvelut: rc-httpd:n sivusto, laskentapooli (crsrv, rcc), glendan profiili | `plan2001/rc/bin/rc-httpd`, `plan2001/sys/src/cmd`, `plan2001/usr` |
-| CPU-VM ja Plan 9 -pilvipalvelin (historiaa: pilvi siirtyy OpenBSD:hen) | `tools/vm-cpu`, `tools/cpu-live`, `tools/cloud`, `tools/cloud-image`, `docs/cloud.md` |
+| CPU-VM ja Plan 9 -pilvipalvelin (historiaa: pilveen toistaiseksi OpenBSD tai Linux, työkalut tähän repoon) | `tools/vm-cpu`, `tools/cpu-live`, `tools/cloud`, `tools/cloud-image`, `docs/cloud.md` |
 | drawterm, 9pterm, rakennus- ja testityökalut | `monolith/` |
 | wasm32-kone: ydin, sivu ja testit, 3a/3c/3l, kirjastot | `plan2001/sys/src/9/wasm32`, `plan2001/sys/src/cmd/3[acl]`, `plan2001/sys/src/lib*/wasm32`, `plan2001/wasm32` |
 | Selainpalvelut: webterm, aux/wsrcpu, signupd, passkeyd, weblimitd, auth/passkey, aux/seckeys, websession, sovellusten originit | `plan2001/sys/src/cmd`, `plan2001/rc/bin`, `plan2001/lib/app` |
