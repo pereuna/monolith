@@ -12,10 +12,12 @@
 # Results: build/subset/$TARGET/trace/{t0,s1,s2}.  The trace runs on the
 # build VM, so only for the target it is (amd64).
 set -e
-here=$(cd "$(dirname "$0")" && pwd); tools=$(dirname "$here"); root=$(dirname "$tools")
+here=$(cd "$(dirname "$0")" && pwd); root=$(dirname "$(dirname "$here")")
+# the VM, its tools and its build/ are Plan2001's (PLAN2001, default ~/Plan2001)
+P2=${PLAN2001:-$HOME/Plan2001}; tools=$P2/tools
 . "$tools/target.sh"
 [ "$TARGET" = amd64 ] || { echo "trace: the build VM is amd64; no trace for $TARGET yet" >&2; exit 2; }
-b=$root/build; out=$b/subset/$TARGET/trace
+b=$P2/build; out=$b/subset/$TARGET/trace
 run9() { "$tools/9run" -d "$b/vm" "$@"; }
 mkdir -p "$b/subset/$TARGET"; rm -rf "$out" "$b/in.img" "$b/out.img" "$b/subset/scratch.qcow2"
 tar cf "$b/in.img" --format=ustar -C "$here" snap.rc export.rc

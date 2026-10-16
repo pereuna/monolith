@@ -1,5 +1,10 @@
 # CPU-palvelin ja laskentapooli
 
+> **16.10.2026:** tämä on Plan2001:n dokumentti ajalta ennen erottamista.
+> Monolith on nyt oma repo (`README.md`), ja Plan2001 on kernel-repo:
+> sen uusi jako on sen `docs/repos.md`:ssä. VM-työkalut (`tools/vm`,
+> `9run`) ja kernelin käännös ovat Plan2001:ssä.
+
 > Plan2001:n CPU-palvelin ei ole kone, jossa suurin laskentateho on. Se on
 > kone, joka omistaa laskentaympäristön. Käyttäjien päätteet eivät ole
 > vain terminaaleja, vaan CPU-palvelimeen dynaamisesti liittyviä

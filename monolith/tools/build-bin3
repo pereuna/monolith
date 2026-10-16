@@ -7,6 +7,7 @@
 set -e
 root=$(cd "$(dirname "$0")/.." && pwd)
 P=$(cd "$root/.." && pwd)
+Q=${PLAN2001:-$HOME/Plan2001}	# Plan2001: its kernel's BootInfo and the boot image's hjfs
 src=$P/subset/9front/sys/src/cmd
 out=$root/build/wasm32
 cc3=$root/build/cc-native/3c
@@ -122,11 +123,11 @@ if ! (cd "$P/plan2001/sys/src/cmd/aux" && "$cc3" -FVw $INC -o "$out/o/cmd/wsrcpu
    ! "$l3" -o "$out/root/bin/aux/wsrcpu" "$out/o/cmd/wsrcpu.3" $libs >>"$out/o/cmd/wsrcpu.err" 2>&1; then
 	echo "build-bin3: wsrcpu:"; head -5 "$out/o/cmd/wsrcpu.err"; fail=1
 fi
-# hjfs: 9front's file server, the machine's disk (#S/sdW0, D6: /boot/init); auth.c Plan2001's (plan2001/sys/src/cmd/hjfs)
+# hjfs: 9front's file server, the machine's disk (#S/sdW0, D6: /boot/init); auth.c Plan2001's ($PLAN2001/plan2001/sys/src/cmd/hjfs)
 mkdir -p "$out/o/cmd/hjfs"
 for f in "$src"/hjfs/*.c; do
 	b=$(basename "$f" .c)
-	[ -e "$P/plan2001/sys/src/cmd/hjfs/$b.c" ] && f=$P/plan2001/sys/src/cmd/hjfs/$b.c
+	[ -e "$Q/plan2001/sys/src/cmd/hjfs/$b.c" ] && f=$Q/plan2001/sys/src/cmd/hjfs/$b.c
 	(cd "$(dirname "$f")" && "$cc3" -FVw $INC -I"$src/hjfs" -o "$out/o/cmd/hjfs/$b.3" "$b.c") >"$out/o/cmd/hjfs/$b.err" 2>&1 || { echo "build-bin3: hjfs/$b.c:"; head -5 "$out/o/cmd/hjfs/$b.err"; fail=1; }
 done
 [ $fail = 0 ] && "$l3" -o "$out/root/bin/hjfs" "$out"/o/cmd/hjfs/*.3 "$out/lib/lib9p.a" "$out/lib/libthread.a" $seclibs $libs "$out/lib/libsec.a" >"$out/o/cmd/hjfs.err" 2>&1 ||

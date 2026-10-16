@@ -8,7 +8,7 @@
 #
 #   tools/cloud-image            -> build/oci/cpu-amd64-poc1.qcow2
 #   PUBLIC=IP                    the server's public address (DNS), default 82.70.55.84
-#   BASE=FILE                    the base, default build/oci/cpu-oci.qcow2 (a
+#   BASE=FILE                    the base, default build/oci/cpu-oci.qcow2 (Plan2001's build/) (a
 #                                9front CPU server on the OCI disk layout, 29.9)
 #
 # What it does, on the console (tools/9run: dialogs and --script, every
@@ -26,20 +26,24 @@
 # The local CPU server VM (tools/vm) is stopped: one VM at a time.
 set -e
 here=$(cd "$(dirname "$0")" && pwd); root=$(dirname "$here")
+P2=${PLAN2001:-$HOME/Plan2001}	# the VM, its tools, the kernel (build/amd64) and build/ are Plan2001's
 cache=${PLAN2001_CACHE:-$HOME/.cache/plan2001}
 sec=$cache/cloud
-base=${BASE:-$root/build/oci/cpu-oci.qcow2}
+base=${BASE:-$P2/build/oci/cpu-oci.qcow2}
 img=$root/build/oci/cloud.qcow2
 out=$root/build/oci/cpu-amd64-poc1.qcow2
 public=${PUBLIC:-82.70.55.84}
 T=$root/monolith/build/9pterm/9pterm
 sock=$HOME/.cache/9pterm-poc1.sock
-run9() { "$here/9run" "$@"; }
+run9() { "$P2/tools/9run" "$@"; }
 say() { echo "cloud-image: $*"; }
 die() { echo "cloud-image: FAILED: $*" >&2; exit 1; }
-for f in "$base" "$root/build/amd64/9pc64" "$root/build/amd64/bootx64.efi" "$T"; do
+for f in "$base" "$P2/build/amd64/9pc64" "$P2/build/amd64/bootx64.efi" "$T"; do
 	[ -s "$f" ] || die "no $f"
 done
+# Plan2001's kernel, loader and bootinfo.h, where setup.rc takes them (REPO/build/amd64)
+mkdir -p "$root/build/amd64"
+cp "$P2/build/amd64/9pc64" "$P2/build/amd64/bootx64.efi" "$P2/plan2001/sys/include/bootinfo.h" "$root/build/amd64/"
 # the wasm32 machine's page, which setup.rc installs (tools/cpu-live.rc pages)
 "$root/monolith/tools/pages" >/dev/null || die "pages (monolith/tools/pages)"
 
@@ -58,13 +62,13 @@ dialog() {	# dialog FILE.in USER [COMMAND]: changeuser-style, PASS replaced
 	sed "s/PASS/$p/" "$1" | run9 -t 120 ${3:+-s "$3"} --dialog - >/dev/null || die "dialog $1 $3"
 }
 boot() {	# boot PROMPT
-	"$here/vm" stop >/dev/null 2>&1 || true
-	"$here/vm" start --disk "$img" --net --oci
+	"$P2/tools/vm" stop >/dev/null 2>&1 || true
+	"$P2/tools/vm" start --disk "$img" --net --oci
 	printf '%s \t!done\n' "$1" | run9 -t 300 --dialog - >/dev/null || die "no $1 prompt"
 }
 halt() {
 	printf '%s\n' "!now done halting	!done" | run9 -t 90 -s fshalt --dialog - >/dev/null || die fshalt
-	"$here/vm" stop >/dev/null 2>&1 || true
+	"$P2/tools/vm" stop >/dev/null 2>&1 || true
 }
 session() {	# session USER: a 9pterm session at $sock
 	rm -f "$sock"

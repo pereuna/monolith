@@ -18,4 +18,7 @@ originit ovat wasm32-koneita (`docs/architecture.md`, vaiheet C ja D;
 
 Monolith oli ennen erillinen repo (pereuna/monolith), joka toi drawtermin
 selaimeen. Sen vaiheet ovat `docs/`:ssa. Drawtermin selainosat, host3,
-wasmapp ja Monolithin JS poistettiin D7:ssä (4.10.2026).
+wasmapp ja Monolithin JS poistettiin D7:ssä (4.10.2026). 28.9.–16.10.2026
+se oli Plan2001:n `monolith/`. 16.10.2026 siitä tuli taas oma repo, johon
+siirtyivät myös Plan2001:n sovellukset, jakelu ja wasm32-kone (repon
+juuren `README.md`).

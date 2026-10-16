@@ -1,5 +1,10 @@
 # Plan2001:n kerrokset: arkkitehtuuri, alusta, rooli, ohjelmat
 
+> **16.10.2026:** tämä on Plan2001:n dokumentti ajalta ennen erottamista.
+> Monolith on nyt oma repo (`README.md`), ja Plan2001 on kernel-repo:
+> sen uusi jako on sen `docs/repos.md`:ssä. VM-työkalut (`tools/vm`,
+> `9run`) ja kernelin käännös ovat Plan2001:ssä.
+
 Suunnitelma 1.10.2026. Lähtökohta: 3c ja 3l (docs/wasm32.md) tekivät
 WebAssemblystä Plan2001:n arkkitehtuurin. Siitä seuraa, että selain ei ole
 päätelaite eikä erikoistapaus vaan yksi alusta muiden joukossa.

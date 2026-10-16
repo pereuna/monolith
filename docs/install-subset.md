@@ -1,5 +1,10 @@
 # Asennusaikainen osajoukko ja USB-asennin
 
+> **16.10.2026:** tämä on Plan2001:n dokumentti ajalta ennen erottamista.
+> Monolith on nyt oma repo (`README.md`), ja Plan2001 on kernel-repo:
+> sen uusi jako on sen `docs/repos.md`:ssä. VM-työkalut (`tools/vm`,
+> `9run`) ja kernelin käännös ovat Plan2001:ssä.
+
 Koneellisesti johdettu luettelo kaikista 9front-tiedostoista, joita järjestelmän
 asentaminen 9frontin omalla tavalla (`inst/start`) tarvitsee, ja siitä
 rakennettu **USB-asennustikku, joka bootaa vain UEFI:llä** Plan2001:n omalla

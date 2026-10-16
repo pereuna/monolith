@@ -7,6 +7,9 @@ here=$(cd "$(dirname "$0")" && pwd); root=$(dirname "$(dirname "$here")")
 admin=${1:-10.201.0.1}
 sec=${PLAN2001_CACHE:-$HOME/.cache/plan2001}/cloud
 T=$root/monolith/build/9pterm/9pterm
+# Plan2001's kernel and loader (PLAN2001, default ~/Plan2001), where kernel.rc takes them
+P2=${PLAN2001:-$HOME/Plan2001}
+mkdir -p "$root/build/amd64" && cp "$P2/build/amd64/9pc64" "$P2/build/amd64/bootx64.efi" "$root/build/amd64/"
 p9() { "$T" -h "$admin" -a "tcp!$admin!567" -u admin -P "$sec/admin.pass" -W 20 -T "${TMO:-120}" -c "$1"; }
 # the reboot ends the connection: what it said is what counts
 out=$(TMO=60 p9 "rc /mnt/term$here/kernel.rc /mnt/term$root" 2>&1 || true)

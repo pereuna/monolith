@@ -1,5 +1,10 @@
 # Plan2001, Plan9-wasm32 ja 9front (päätös 7.10.2026)
 
+> **16.10.2026:** tämä on Plan2001:n dokumentti ajalta ennen erottamista.
+> Monolith on nyt oma repo (`README.md`), ja Plan2001 on kernel-repo:
+> sen uusi jako on sen `docs/repos.md`:ssä. VM-työkalut (`tools/vm`,
+> `9run`) ja kernelin käännös ovat Plan2001:ssä.
+
 wasm32-kone siirrettiin omaksi projektikseen 5.10.2026:
 [pereuna/plan9-wasm32](https://github.com/pereuna/plan9-wasm32)
 (tuotu tämän repon commitista `59ee476`). Se on Plan 9 wasm32:lle ja

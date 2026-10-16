@@ -4,9 +4,11 @@
 # tools/build.sh): build/subset/$TARGET/plan2001-inst.img, a raw disk image
 # to dd onto a USB stick.  Booted by UEFI only (see mkusb.rc).
 set -e
-here=$(cd "$(dirname "$0")" && pwd); tools=$(dirname "$here"); root=$(dirname "$tools")
+here=$(cd "$(dirname "$0")" && pwd); root=$(dirname "$(dirname "$here")")
+# the VM, its tools and its build/ are Plan2001's (PLAN2001, default ~/Plan2001)
+P2=${PLAN2001:-$HOME/Plan2001}; tools=$P2/tools
 . "$tools/target.sh"
-b=$root/build; s=$b/subset/$TARGET
+b=$P2/build; s=$b/subset/$TARGET
 run9() { "$tools/9run" -d "$b/vm" "$@"; }
 for f in "$kernel" "$loader" hjfs; do
 	[ -s "$tbuild/$f" ] || { echo "mkusb: no $tbuild/$f (run tools/build.sh)" >&2; exit 1; }

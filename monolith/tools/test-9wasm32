@@ -15,7 +15,7 @@
 # D1's rio: a clock window, typing into an rc window, and /boot/init as
 # 9front's - glenda's profile, rio -i riostart, stats and term%;
 # D2's network: /net/tcp and /net/cs over WebSockets to the CPU VM's
-# webterm (tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net; else
+# webterm (Plan2001's tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net; else
 # skipped), from the origin it takes (127.0.0.1:18080); D3's libraries
 # (crypto: libsec, libmp, libauthsrv against Python's values) and dp9ik
 # through factotum - glenda and bootes over a pipe with the tickets from
@@ -328,7 +328,7 @@ if want dp9ikvm $names; then
 	if (exec 3<>/dev/tcp/127.0.0.1/17080) 2>/dev/null && [ -f ~/.cache/plan2001/cpu.pass ]; then
 		HTTPPORT=18080 HALTWAIT=120 run dp9ikvm '["/bin/rc", "-c", "mntgen -s slashmnt /mnt; auth/factotum -n -sfactotum; echo '"'"'key proto=dp9ik dom=plan2001 user=glenda !password='"$(cat ~/.cache/plan2001/cpu.pass)"''"'"' >/mnt/factotum/ctl; d3 -r cpu; echo done"]'
 	else
-		echo "test-9wasm32: dp9ikvm: skipped (no CPU VM: tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
+		echo "test-9wasm32: dp9ikvm: skipped (no CPU VM: Plan2001's tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
 	fi
 fi
 # factotum's keys from the CPU VM's secstore (tools/vm-cpu: secstored, glenda's account, her
@@ -344,7 +344,7 @@ if want secstorevm $names; then
 			"aux/kbdfs -q -s cons /dev/eia0; {mntgen -s slashmnt /mnt; auth/factotum -n -sfactotum; ramfs -m /mnt/ram; cd /mnt/ram; echo 'key proto=dp9ik dom=plan2001 user=glenda !password=$p' >factotum; echo $sp | auth/secstore -i -s tcp!cpu!5356 -p factotum >[2]/dev/null; echo put \$status; rm factotum; rc /boot/secstore; rcpu -h cpu -c 'cat /mnt/factotum/ctl' >[2=1] | sed '/short write in reply/d'; echo done} </dev/cons >/dev/cons >[2=1]")" \
 			"$(python3 -c 'import json,sys; print(json.dumps([["secstore password: ", sys.argv[1] + "\n"]]))' "$sp")"
 	else
-		echo "test-9wasm32: secstorevm: skipped (no CPU VM with secstore: tools/vm-cpu --update; tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
+		echo "test-9wasm32: secstorevm: skipped (no CPU VM with secstore: tools/vm-cpu --update; Plan2001's tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
 	fi
 fi
 # a Plan2001 account on the CPU VM (docs/webauthn.md; tools/vm-cpu: signupd, passkeyd, secstored, keyfs):
@@ -359,14 +359,14 @@ if want signupvm $names; then
 			"aux/kbdfs -q -s cons /dev/eia0; mntgen -s slashmnt /mnt; auth/factotum -n -sfactotum; {n=erin^\`{date -un}; auth/passkey -s cpu signup \$n; auth/passkey -s cpu login | aux/seckeys -I; cat /mnt/factotum/ctl; rcpu -h cpu -u \$n -c 'echo remote: \$user; test -d /usr/\$user && echo home; test -e /net/tcp || echo no network; test -e /srv/boot || echo no srv' >[2=1] | sed '/short write in reply/d'; echo rcpu status \$status; echo done} </dev/cons >[2=1] | sed 's/erin[0-9]+/erin/g' >/dev/cons")" \
 			'[["account password: ", "erin-password-1\n"], ["again: ", "erin-password-1\n"]]'
 	else
-		echo "test-9wasm32: signupvm: skipped (no CPU VM: tools/vm-cpu --update; tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
+		echo "test-9wasm32: signupvm: skipped (no CPU VM: tools/vm-cpu --update; Plan2001's tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
 	fi
 fi
 if want rcpuvm $names; then
 	if (exec 3<>/dev/tcp/127.0.0.1/17080) 2>/dev/null && [ -f ~/.cache/plan2001/cpu.pass ]; then
 		HTTPPORT=18080 HALTWAIT=150 run rcpuvm '["/bin/rc", "-c", "mntgen -s slashmnt /mnt; auth/factotum -n -sfactotum; echo '"'"'key proto=dp9ik dom=plan2001 user=glenda !password='"$(cat ~/.cache/plan2001/cpu.pass)"''"'"' >/mnt/factotum/ctl; rcpu -h cpu -c '"'"'echo remote: service $service; test -e /mnt/term/dev/draw/new && echo the terminal draws; cat /mnt/term/env/sysname; echo'"'"' >[2=1] | sed '"'"'/short write in reply/d'"'"'; echo rcpu status $status; echo done"]'
 	else
-		echo "test-9wasm32: rcpuvm: skipped (no CPU VM: tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
+		echo "test-9wasm32: rcpuvm: skipped (no CPU VM: Plan2001's tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
 	fi
 fi
 # a machine booted as cpu (plan9.ini's service=cpu): /boot/init as always, glenda's profile without
@@ -387,7 +387,7 @@ if want net $names; then
 		HTTPPORT=18080 PAGEARGS='&ringstart=4294967240' run net '["/bin/d2"]'	# and 2^32
 		HTTPPORT=18080 HALTWAIT=200 run netloop '["/bin/d2", "-l", "20", "4"]'	# conversations made again and again, four procs at once
 	else
-		echo "test-9wasm32: net: skipped (no CPU VM: tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
+		echo "test-9wasm32: net: skipped (no CPU VM: Plan2001's tools/vm start --disk ~/.cache/plan2001/cpu.qcow2 --net)"
 	fi
 fi
 echo "test-9wasm32: ok"

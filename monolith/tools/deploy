@@ -3,11 +3,9 @@
 # VM, which then serves it itself: https://127.0.0.1:17443/ (rc-httpd
 # behind tlssrv, webterm's wss on the same origin; docs/architecture.md,
 # D7).  Restarts the VM.
-#   tools/deploy        PLAN2001 (default: the repo this monolith/ is in);
-#                       CPU_CERT_SANS as for its tools/vm-cpu
+#   tools/deploy        CPU_CERT_SANS as for ../tools/vm-cpu
 set -e
 root=$(cd "$(dirname "$0")/.." && pwd)
-plan2001=${PLAN2001:-$(dirname "$root")}
 "$root/tools/pages" "$root/build/deploy"
-"$plan2001/tools/vm-cpu" --update --web "$root/build/deploy"
+"$(dirname "$root")/tools/vm-cpu" --update --web "$root/build/deploy"
 echo "deploy: https://127.0.0.1:17443/"
