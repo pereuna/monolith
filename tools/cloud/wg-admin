@@ -1,7 +1,9 @@
 #!/bin/bash
 # The administrators' WireGuard tunnel to the Plan2001 cloud CPU server
-# (tools/cloud/setup.rc: 10.201.0.1 there, 10.201.0.2 here), on this Linux
-# machine with sudo: interface wgp2001, keys in ~/.cache/plan2001/cloud.
+# (10.201.0.1 there), on this Linux machine with sudo: interface wgp2001,
+# this machine's key and address in ~/.cache/plan2001/cloud.
+#   tools/cloud/wg-admin init ADDRESS     a new machine: its own key, its
+#                                         address in tools/cloud/wg-peers
 #   tools/cloud/wg-admin up [HOST:PORT]   default 82.70.55.84:51820
 #   tools/cloud/wg-admin down
 # Then 9pterm reaches the server's auth and rcpu, which take no one from
@@ -9,18 +11,29 @@
 set -e
 sec=${PLAN2001_CACHE:-$HOME/.cache/plan2001}/cloud
 case $1 in
+init)
+	addr=$2
+	[[ $addr =~ ^10\.201\.0\.([2-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$ ]] || {
+		echo "usage: tools/cloud/wg-admin init 10.201.0.N" >&2; exit 2; }
+	mkdir -p "$sec"; chmod 700 "$sec"
+	[ -s "$sec/wg-admin.key" ] || (umask 077; wg genkey >"$sec/wg-admin.key")
+	wg pubkey <"$sec/wg-admin.key" >"$sec/wg-admin.pub"
+	echo "$addr" >"$sec/wg-admin.addr"
+	echo "wg-admin: add this line to tools/cloud/wg-peers, then tools/cloud/peers on a machine that has the tunnel:"
+	printf '%s\t%s\t%s\n' "$(hostname -s)" "$addr" "$(cat "$sec/wg-admin.pub")" ;;
 up)
 	ep=${2:-82.70.55.84:51820}
+	addr=$(cat "$sec/wg-admin.addr" 2>/dev/null || echo 10.201.0.2)
 	sudo ip link del wgp2001 2>/dev/null || true
 	sudo ip link add wgp2001 type wireguard
 	sudo wg set wgp2001 private-key "$sec/wg-admin.key" \
 		peer "$(cat "$sec/wg-cloud.pub")" endpoint "$ep" allowed-ips 10.201.0.1/32 persistent-keepalive 25
-	sudo ip addr add 10.201.0.2/24 dev wgp2001
+	sudo ip addr add "$addr/24" dev wgp2001
 	sudo ip link set wgp2001 up mtu 1420
-	echo "wg-admin: wgp2001 up, 10.201.0.2 -> 10.201.0.1 at $ep" ;;
+	echo "wg-admin: wgp2001 up, $addr -> 10.201.0.1 at $ep" ;;
 down)
 	sudo ip link del wgp2001 2>/dev/null || true
 	echo "wg-admin: wgp2001 down" ;;
 *)
-	echo "usage: tools/cloud/wg-admin up [HOST:PORT] | down" >&2; exit 2 ;;
+	echo "usage: tools/cloud/wg-admin init ADDRESS | up [HOST:PORT] | down" >&2; exit 2 ;;
 esac

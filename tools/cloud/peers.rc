@@ -1,0 +1,33 @@
+#!/bin/rc
+# On the cloud CPU server as admin (tools/cloud/peers, setup.rc):
+#	peers.rc PEERS
+# PEERS is tools/cloud/wg-peers through /mnt/term.  /adm/wg/wg0 keeps its
+# private and listen lines and gets the peers from PEERS; wg0 gets the
+# new ones at once, and those no longer listed are removed from it.
+rfork e
+peers=$1
+f=/adm/wg/wg0
+fn fail { echo PEERS FAILED: $*; exit $1 }
+test -r $peers || fail no $peers
+test -r $f || fail no $f
+grep -v '^peer ' $f >/tmp/wg0.new || fail $f has no keys
+grep -v '^(#|[ 	]*$)' $peers | awk 'NF != 3 || $2 !~ /^10\.201\.0\.[0-9]+$/ || length($3) != 44 { print "bad line: " $0 >"/fd/2"; exit 1 }
+	{ print "peer " $3 " allowed " $2 "/32" }' >>/tmp/wg0.new || fail $peers
+old=`{awk '$1 == "peer" { print $2 }' $f}
+new=`{awk '$1 == "peer" { print $2 }' /tmp/wg0.new}
+if(test -e '#W/wg0/ctl'){
+	ifs0=$ifs
+	ifs='
+'
+	lines=`{grep '^peer ' /tmp/wg0.new}
+	ifs=$ifs0
+	# removed first: a prefix has one owner, a new key may take an old one's
+	for(k in $old)
+		if(! ~ $k $new)
+			echo remove $k >'#W/wg0/ctl' || fail wg0: remove $k
+	for(l in $lines)
+		echo $l >'#W/wg0/ctl' || fail wg0: $l
+}
+cp /tmp/wg0.new $f && chmod 600 $f && rm /tmp/wg0.new || fail $f
+echo peers: `{grep -c '^peer ' $f} in $f
+echo PEERS-DONE

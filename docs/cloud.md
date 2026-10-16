@@ -268,7 +268,18 @@ kirjoiteta käsin:
 
 **Ylläpito:**
 - `tools/cloud/wg-admin up` nostaa tällä koneella rajapinnan `wgp2001`
-  (10.201.0.2 ↔ 10.201.0.1).
+  (koneen osoite ↔ 10.201.0.1).
+- Jokaisella ylläpitokoneella on oma WireGuard-avain ja -osoite; samaa
+  avainta ei kopioida koneelta toiselle. Lista on `tools/cloud/wg-peers`
+  (julkiset avaimet, silli 10.201.0.2).
+- Uusi kone (esim. kuha): `tools/cloud/wg-admin init 10.201.0.N` tekee
+  avaimen koneelle ja tulostaa rivin `wg-peers`iin. Kun rivi on lisätty,
+  `tools/cloud/peers` tunnelin omaavalta koneelta vie listan palvelimelle
+  (`/adm/wg/wg0` ja wg0 heti, ilman uudelleenkäynnistystä). Rivin poisto
+  ja `peers` sulkee koneen pois.
+- Koneelle kopioidaan lisäksi `wg-cloud.pub` ja ihmisen oma Plan 9
+  -salasana (`admin.pass`). `wg-cloud.key` (palvelimen avain) pysyy
+  sillillä.
 - Sen jälkeen `9pterm -h 10.201.0.1 -a 'tcp!10.201.0.1!567' -u admin
   -P ~/.cache/plan2001/cloud/admin.pass`.
 - `tools/cpu-live SOCK` toimii saman tunnelin yli.

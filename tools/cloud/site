@@ -1,0 +1,18 @@
+#!/bin/bash
+# plan2001.com as Plan9-wasm32's demo (tools/cloud/site.rc; plan9-wasm32's
+# docs/plan2001-server.md) over the administrators' WireGuard tunnel
+# (tools/cloud/wg-admin up), as admin.  The binaries (aux/ethernetd,
+# aux/etherws), the auth page and plan9.ini's netauth= are plan9-wasm32's
+# deploy's (its tools/site/deploy -n).
+#   tools/cloud/site [ADMIN-IP]
+set -e
+here=$(cd "$(dirname "$0")" && pwd); root=$(dirname "$(dirname "$here")")
+admin=${1:-10.201.0.1}
+sec=${PLAN2001_CACHE:-$HOME/.cache/plan2001}/cloud
+T=$root/monolith/build/9pterm/9pterm
+[ -x "$T" ] || "$root/monolith/tools/build" >/dev/null
+out=$("$T" -h "$admin" -a "tcp!$admin!567" -u admin -P "$sec/admin.pass" -W 20 -T "${TMO:-900}" \
+	-c "rc /mnt/term$here/site.rc /mnt/term$root" 2>&1 || true)
+echo "$out"
+echo "$out" | grep -q SITE-DONE || { echo "site: not done" >&2; exit 1; }
+echo "site: https://plan2001.com/ and https://auth.plan2001.com/"

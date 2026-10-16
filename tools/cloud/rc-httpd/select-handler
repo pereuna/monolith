@@ -1,0 +1,43 @@
+#!/bin/rc
+# plan2001.com's site for rc-httpd behind tlssrv (/rc/bin/service/tcp443;
+# tools/cloud/site.rc): for now Plan9-wasm32's demo (its
+# docs/plan2001-server.md).  rc-httpd sources this file: $SERVER_NAME,
+# $location, $request and $reqlines are its; $web and $remote (the
+# browser's address) tcp443's.
+#   auth.plan2001.com   the auth site, /sys/lib/plan2001/auth (its passkeys'
+#                       page), and GET /auth: its WebSocket to ethernetd
+#   plan2001.com        $web: the front page, /plan9-wasm32/, /iso/; and
+#                       GET /ether: a machine's Ethernet to ethernetd
+#   (any other name)    $web, no WebSocket
+# aux/etherws takes the WebSocket upgrades (it checks Upgrade and Origin).
+# Every answer has HSTS and nosniff and the site's CSP (rc-httpd's
+# extra_headers); the pages have COOP and COEP (plan2001-static).
+if(~ $#web 0)
+	web=/sys/lib/plan2001/web
+fn headers {
+	extra_headers=($extra_headers 'Strict-Transport-Security: max-age=31536000' \
+		'X-Content-Type-Options: nosniff' 'Content-Security-Policy: '^$"*)
+}
+fn etherws {
+	exec /bin/aux/etherws -r -A https://auth.plan2001.com -E https://plan2001.com
+}
+switch($SERVER_NAME){
+case auth.plan2001.com
+	headers 'default-src ''self''; script-src ''self'' ''unsafe-inline''; connect-src ''self'' wss://auth.plan2001.com; frame-ancestors ''none'''
+	switch($location){
+	case /auth
+		etherws
+	case *
+		exec $rc_httpd_dir/handlers/plan2001-static /sys/lib/plan2001/auth
+	}
+case *
+	headers 'script-src ''self'' blob: ''wasm-unsafe-eval'' ''unsafe-inline''; connect-src ''self'' wss://plan2001.com; worker-src ''self'' blob:'
+	switch($location){
+	case /ether
+		if(~ $SERVER_NAME plan2001.com)
+			etherws
+		error 404
+	case *
+		exec $rc_httpd_dir/handlers/plan2001-static $web
+	}
+}

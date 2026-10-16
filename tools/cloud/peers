@@ -1,0 +1,15 @@
+#!/bin/bash
+# tools/cloud/wg-peers onto the cloud CPU server (peers.rc) over the
+# administrators' WireGuard tunnel (tools/cloud/wg-admin up): a machine
+# added there gets in, one removed is out at once.
+#   tools/cloud/peers [ADMIN-IP]
+set -e
+here=$(cd "$(dirname "$0")" && pwd); root=$(dirname "$(dirname "$here")")
+admin=${1:-10.201.0.1}
+sec=${PLAN2001_CACHE:-$HOME/.cache/plan2001}/cloud
+T=$root/monolith/build/9pterm/9pterm
+[ -s "$sec/admin.pass" ] || { echo "peers: no $sec/admin.pass" >&2; exit 1; }
+out=$("$T" -h "$admin" -a "tcp!$admin!567" -u admin -P "$sec/admin.pass" -W 20 -T 60 \
+	-c "rc /mnt/term$here/peers.rc /mnt/term$here/wg-peers" 2>&1 || true)
+echo "$out"
+echo "$out" | grep -q PEERS-DONE || { echo "peers: not done" >&2; exit 1; }
