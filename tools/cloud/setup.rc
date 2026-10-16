@@ -106,9 +106,10 @@ mkdir -p /adm/wg
 {
 	echo private `{cat $sec/wg-cloud.key}
 	echo listen 51820
-	echo peer `{cat $sec/wg-admin.pub} allowed 10.201.0.2/32
 } >/adm/wg/wg0 || fail wg config
 chmod 600 /adm/wg/wg0
+# the administrators' machines: tools/cloud/wg-peers
+rc $repo/tools/cloud/peers.rc $repo/tools/cloud/wg-peers || fail wg peers
 
 step startup: $cfg/cpustart
 k=`{grep '^crsrv' $cfg/cpustart}

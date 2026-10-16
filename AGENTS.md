@@ -26,8 +26,9 @@ siitä:
 
 Kernelin muutokset tehdään Plan2001:ssä, eivät täällä. Plan9-wasm32
 (pereuna/plan9-wasm32) on selaimen 9front-yhteensopiva Plan 9. Tämän repon
-wasm32-ominaisuudet on tarkoitus siirtää sinne. Oraclen pilvikone siirtyy
-vakio-OpenBSD:hen, joten `tools/cloud` ja `cloud-image` ovat historiaa.
+wasm32-ominaisuudet on tarkoitus siirtää sinne. Oraclen pilveen asennetaan
+toistaiseksi vakio-OpenBSD tai -Linux (päätös 16.10.2026). Sen työkalut
+tehdään tänne; Plan 9 -pilven `tools/cloud` ja `cloud-image` ovat historiaa.
 
 ## Puu
 

@@ -1,0 +1,196 @@
+#!/bin/rc
+# plan2001.com as Plan9-wasm32's demo (its docs/plan2001-server.md,
+# plan9-wasm32 946ec96): run as admin, the host owner, by tools/cloud/site
+# over the administrators' tunnel, the repo through /mnt/term:
+#	rc site.rc REPO
+# Added:
+#   the certificate   plan2001.com and auth.plan2001.com in one (libsec makes
+#                     the names after the first comma subjectAltNames);
+#                     acmechallenge puts NAME.plan2001.com's dns-01 at
+#                     _acme-challenge.NAME.cpu.plan2001.com (Cloudflare's
+#                     CNAME); certrenew fetches it when its CSR is newer
+#   rc-httpd          tools/cloud/rc-httpd/select-handler: auth.plan2001.com's
+#                     site (/sys/lib/plan2001/auth), the WebSockets GET /auth
+#                     and GET /ether to aux/etherws, HSTS, nosniff and CSP;
+#                     tcp443 gives it the browser's address ($remote)
+#   cpustart          aux/ethernetd, once plan9-wasm32's deploy has installed it
+# Removed (moved to $old, not deleted): webterm (its WebSockets and
+# tcp17080), the app origins (/lib/app, /rc/bin/apps, the zone's
+# APP.cpu.plan2001.com), crsrv and the compute pool (crsrv, rcc),
+# Monolith (/sys/lib/monolith), plan2001.html and its machine's files,
+# signupd, passkeyd, secstored and weblimitd.  The web accounts' data
+# (keyfs, /adm/secstore, /adm/webauthn) stays, and so does websession,
+# which limits them (tcp17019's fn server).
+# Kept: tlssrv and rc-httpd, acmed, certrenew and the zone cpu.plan2001.com,
+# WireGuard, localonly, auth (567) and rcpu (17019) for the tunnel,
+# /iso/ and /plan9-wasm32/.  It can be run again.
+rfork e
+repo=$1
+tls=/sys/lib/tls
+web=/sys/lib/plan2001/web
+cfg=/cfg/$sysname
+old=/sys/lib/plan2001/old/`{date -n}
+fn fail { echo SITE FAILED: $*; exit $"* }
+fn step { echo; echo '==' $* }
+# a file or directory to $old, its path kept
+fn keep {
+	for(f in $*){
+		if(test -e $f){
+			mkdir -p $old^`{basename -d $f}
+			if(test -d $f)
+				mkdir -p $old^$f && dircp $f $old^$f && rm -rf $f
+			if not
+				cp $f $old^$f && rm -f $f
+			echo moved $f
+		}
+	}
+}
+# the processes whose ps -a line matches $1
+fn stop {
+	for(p in `{ps -a | grep $1 | grep -v ' grep ' | awk '{print $2}'}){
+		echo kill >/proc/$p/note && echo stopped $p: $1
+	}
+}
+~ $#repo 1 || fail usage: rc site.rc REPO
+test -r $repo/tools/cloud/rc-httpd/select-handler || fail no $repo/tools/cloud/rc-httpd/select-handler
+mkdir -p $old
+for(f in /rc/bin/rc-httpd/select-handler /rc/bin/service/tcp443 $cfg/cpustart /lib/ndb/local /rc/bin/certrenew /rc/bin/acmechallenge $tls/acmed/plan2001.com.csr){
+	mkdir -p $old^`{basename -d $f}
+	cp $f $old^$f
+}
+echo the files changed here, as they were: $old
+
+step 'the certificate: plan2001.com, auth.plan2001.com'
+cat >/rc/bin/acmechallenge <<'X'
+#!/bin/rc
+# acmed -e: method, subject, token, response.  dns-01 in this machine's
+# own zone (cpu.plan2001.com); a name of plan2001.com outside it through
+# its CNAME (Cloudflare): _acme-challenge.plan2001.com ->
+# _acme-challenge.cpu.plan2001.com, _acme-challenge.NAME.plan2001.com ->
+# _acme-challenge.NAME.cpu.plan2001.com.  acmed takes a certificate's
+# names one at a time, so the one file holds the one asked now
+rfork e
+if(! ~ $1 dns-01)
+	exit 'not dns-01'
+dom=$2
+switch($dom){
+case cpu.plan2001.com *.cpu.plan2001.com
+	status=''
+case plan2001.com
+	dom=cpu.plan2001.com
+case *.plan2001.com
+	dom=`{echo $dom | sed 's/\.plan2001\.com$/.cpu.plan2001.com/'}
+case *
+	exit 'not plan2001.com'
+}
+dom=`{echo $dom | sed 's/^\*\.//'}
+{
+	echo 'dom=_acme-challenge.'^$dom^' soa='
+	echo '	txt="'^$4^'"'
+} >/lib/ndb/dnschallenge || exit 'no dnschallenge'
+echo refresh >/net/dns
+X
+chmod 775 /rc/bin/acmechallenge
+auth/rsa2csr 'CN=plan2001.com,auth.plan2001.com' $tls/cpu.plan2001.com.key >$tls/acmed/plan2001.com.csr.new &&
+	mv $tls/acmed/plan2001.com.csr.new $tls/acmed/plan2001.com.csr || fail csr
+cat >/rc/bin/certrenew <<'X'
+#!/bin/rc
+# Plan2001: the Let's Encrypt certificates, plan2001.com (with
+# auth.plan2001.com: tcp443) and *.cpu.plan2001.com, through this machine's
+# own ndb/dns (acmechallenge), each fetched when there is none, it is older
+# than 60 days or its CSR is newer (new names); what happens goes to
+# /sys/log/certrenew
+rfork e
+d=/sys/lib/tls/acmed
+test -e /mnt/web/clone || webfs
+fn renew {
+	crt=$d/$1.crt
+	if(test -s $crt && test $crt -nt $d/$1.csr && ! ~ `{echo `{date -n} - `{mtime $crt | awk '{print $1}'} '>' 5184000 | hoc} 1)
+		status=''
+	if not {
+		if(auth/acmed -e /rc/bin/acmechallenge hostmaster@plan2001.com $d/$1.csr >$crt.new >[2]/tmp/certrenew.err && test -s $crt.new){
+			mv $crt.new $crt
+			echo `{date} $1 renewed >>/sys/log/certrenew
+		}
+		if not {
+			echo `{date} $1 failed: `{cat /tmp/certrenew.err} >>/sys/log/certrenew
+			rm -f $crt.new
+		}
+	}
+}
+renew plan2001.com
+renew cpu.plan2001.com
+X
+chmod 775 /rc/bin/certrenew
+certrenew
+tail -2 /sys/log/certrenew
+ls -l $tls/acmed/plan2001.com.crt
+
+step 'rc-httpd: the auth site, the WebSockets to etherws, the headers'
+cp $repo/tools/cloud/rc-httpd/select-handler /rc/bin/rc-httpd/select-handler || fail select-handler
+cp $repo/plan2001/rc/bin/rc-httpd/handlers/plan2001-static /rc/bin/rc-httpd/handlers/plan2001-static || fail plan2001-static
+chmod 775 /rc/bin/rc-httpd/select-handler /rc/bin/rc-httpd/handlers/plan2001-static
+mkdir -p /sys/lib/plan2001/auth
+chmod 775 /sys/lib/plan2001/auth
+test -s /sys/lib/plan2001/auth/index.html || echo 'no /sys/lib/plan2001/auth/index.html yet: plan9-wasm32''s tools/site/deploy puts it there'
+cat >/rc/bin/service/tcp443 <<'X'
+#!/bin/rc
+# https: plan2001.com, Plan9-wasm32's demo, and auth.plan2001.com
+# (tools/cloud/site.rc: rc-httpd, its select-handler), with the Let's
+# Encrypt certificate for both (certrenew), else *.cpu.plan2001.com's,
+# else the development one; $remote, the browser's address, for etherws
+crt=/sys/lib/tls/acmed/plan2001.com.crt
+test -s $crt || crt=/sys/lib/tls/acmed/cpu.plan2001.com.crt
+test -s $crt || crt=/sys/lib/tls/monolith.pem
+remote=()
+if(~ $#* 3 && test -r $3/remote)
+	remote=`{cat $3/remote}
+web=/sys/lib/plan2001/web exec tlssrv -c $crt /rc/bin/rc-httpd/rc-httpd
+X
+chmod 775 /rc/bin/service/tcp443
+
+step 'cpustart: no compute pool, secstored or weblimitd; ethernetd'
+grep -v '^(crsrv |mount -c /srv/compute |auth/secstored$|aux/weblimitd )' $cfg/cpustart >/tmp/cpustart || fail cpustart
+if(! grep -s ethernetd /tmp/cpustart){
+	cat >>/tmp/cpustart <<'X'
+# plan9-wasm32's machines' network (aux/ethernetd, its docs/network.md),
+# once its deploy has installed it: after the network, as the host owner
+mkdir -p /adm/ether/cred; chmod 700 /adm/ether
+touch /sys/log/ether; chmod 666 /sys/log/ether
+if(test -x /bin/aux/ethernetd)
+	aux/ethernetd -r auth.plan2001.com -o https://auth.plan2001.com &
+X
+}
+cp /tmp/cpustart $cfg/cpustart || fail cpustart
+cat $cfg/cpustart
+
+step 'webterm, signupd and passkeyd: no more services'
+keep /rc/bin/service/tcp17080 /rc/bin/service.auth/tcp17040 /rc/bin/service.auth/tcp17041
+stop 'tcp!\*!17080\]'
+stop 'tcp!\*!17040\]'
+stop 'tcp!\*!17041\]'
+
+step 'crsrv, secstored, weblimitd: stopped'
+stop ' crsrv( |$)'
+stop ' secstored( |$)'
+stop ' weblimitd( |$)'
+
+step 'the app origins: /lib/app, apps, the zone'
+keep /lib/app /rc/bin/apps
+grep -v '^dom=(acme|clock|compute|sam|stats|term)\.cpu\.plan2001\.com ip=' /lib/ndb/local >/tmp/ndblocal || fail ndb
+cp /tmp/ndblocal /lib/ndb/local || fail ndb
+echo -n refresh >/net/cs
+echo -n refresh >/net/dns
+grep 'cpu\.plan2001\.com' /lib/ndb/local
+
+step 'Plan2001''s machine (plan2001.html), Monolith, the programs'
+keep $web/plan2001.html $web/9wasm32.wasm $web/9wasm32.wasm.gz $web/platform.js $web/platform.js.gz \
+	$web/w3root.fs $web/w3root.fs.gz $web/login $web/secstore /sys/lib/monolith
+keep /amd64/bin/webterm /amd64/bin/crsrv /amd64/bin/rcc /amd64/bin/aux/signupd /amd64/bin/aux/passkeyd /amd64/bin/aux/weblimitd
+
+step what is left
+ls /rc/bin/service /rc/bin/service.auth | grep -v '/!'
+ls -l $web
+sleep 2
+ps | grep -s ' (crsrv|secstored|weblimitd|webterm|signupd|passkeyd)$' && fail still running
+echo SITE-DONE

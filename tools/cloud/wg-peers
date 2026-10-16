@@ -1,0 +1,6 @@
+# The administrators' WireGuard peers of the cloud CPU server (10.201.0.1):
+# a machine a line, NAME ADDRESS PUBLICKEY.  Each machine makes its own key
+# (tools/cloud/wg-admin init ADDRESS) and only its public key comes here;
+# tools/cloud/peers puts this list on the server, setup.rc on a new image.
+silli	10.201.0.2	URtbchRKBp//gVG97f04Nvr0r6S5WOTzEPfn0eq+A1E=
+kuha	10.201.0.3	vLR+whUgrb0rdGGZUg6dlxkLwYLCb6hOCFM9FT+ZenQ=
